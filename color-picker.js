@@ -8,13 +8,12 @@ var ReactColorPicker = React.createClass({
   },
   render: function() {
     return (
-      <div style={{ margin: '20px 20px 20px', textAlign: 'center' }}>
 	    <ColorPicker
 	      animation="slide-up"
+	      placement="bottomLeft"
 	      color={'#36c'}
 	      onChange={this.changeHandler}
 	    />
-	  </div>
     );
   }
 });

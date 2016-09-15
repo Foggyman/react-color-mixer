@@ -21436,15 +21436,12 @@
 	    console.log(e);
 	  },
 	  render: function () {
-	    return React.createElement(
-	      "div",
-	      { style: { margin: '20px 20px 20px', textAlign: 'center' } },
-	      React.createElement(ColorPicker, {
-	        animation: "slide-up",
-	        color: '#36c',
-	        onChange: this.changeHandler
-	      })
-	    );
+	    return React.createElement(ColorPicker, {
+	      animation: "slide-up",
+	      placement: "bottomLeft",
+	      color: '#36c',
+	      onChange: this.changeHandler
+	    });
 	  }
 	});
 
