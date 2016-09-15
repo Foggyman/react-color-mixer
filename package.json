@@ -1,0 +1,39 @@
+{
+  "name": "react-color-picker",
+  "version": "1.0.0",
+  "description": "An advanced color picker react component",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Foggyman/react-color-picker.git"
+  },
+  "keywords": [
+    "reactJS",
+    "color",
+    "picker",
+    "react",
+    "colors",
+    "picker"
+  ],
+  "author": "Nicola Crovetti",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Foggyman/react-color-picker/issues"
+  },
+  "homepage": "https://github.com/Foggyman/react-color-picker#readme",
+  "devDependencies": {
+    "webpack": "^1.13.2"
+  },
+  "dependencies": {
+    "babel-core": "^6.14.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-react": "^6.11.1",
+    "install": "^0.8.1",
+    "npm": "^3.10.7",
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1"
+  }
+}
