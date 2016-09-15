@@ -46,9 +46,9 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(34);
-	var ReactColorPicker = __webpack_require__(172);
+	var ColorMixer = __webpack_require__(172);
 
-	ReactDOM.render(React.createElement(ReactColorPicker, null), document.getElementById('content'));
+	ReactDOM.render(React.createElement(ColorMixer, null), document.getElementById('content'));
 
 /***/ },
 /* 1 */
@@ -21429,23 +21429,38 @@
 	ColorPicker = __webpack_require__(173);
 	__webpack_require__(232);
 
-	var ReactColorPicker = React.createClass({
-	  displayName: "ReactColorPicker",
+	var ColorMixer = React.createClass({
+	  displayName: "ColorMixer",
 
-	  changeHandler: function (e) {
+	  changeHandlerColor1: function (e) {
+	    console.log("Color 1:");
+	    console.log(e);
+	  },
+	  changeHandlerColor2: function (e) {
+	    console.log("Color 2:");
 	    console.log(e);
 	  },
 	  render: function () {
-	    return React.createElement(ColorPicker, {
-	      animation: "slide-up",
-	      placement: "bottomLeft",
-	      color: '#36c',
-	      onChange: this.changeHandler
-	    });
+	    return React.createElement(
+	      "div",
+	      null,
+	      React.createElement(ColorPicker, {
+	        animation: "slide-up",
+	        placement: "bottomLeft",
+	        color: '#36c',
+	        onChange: this.changeHandlerColor1
+	      }),
+	      React.createElement(ColorPicker, {
+	        animation: "slide-up",
+	        placement: "bottomLeft",
+	        color: '#67f',
+	        onChange: this.changeHandlerColor2
+	      })
+	    );
 	  }
 	});
 
-	module.exports = ReactColorPicker;
+	module.exports = ColorMixer;
 
 /***/ },
 /* 173 */

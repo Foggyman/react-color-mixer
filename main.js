@@ -1,10 +1,10 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactColorPicker = require("./color-picker.js");
+var ColorMixer = require("./color-mixer.js");
 
 
 
 ReactDOM.render(
-  <ReactColorPicker/>,
+  <ColorMixer/>,
   document.getElementById('content')
 );
