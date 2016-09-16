@@ -1,5 +1,5 @@
 module.exports = {
-     entry: './Demo/main.js',
+     entry: './Demo/main.jsx',
      output: {
          path: './Demo',
          filename: 'bundle.js'
@@ -11,7 +11,7 @@ module.exports = {
 	     		loader: "style!css"
 	     	},
 	     	{ 
-	     		test: /\.js$/,
+	     		test: /\.jsx$/,
 	     		loader: 'babel-loader',
 	     	  	exclude: /(node_modules)/,
 	      		query: {
@@ -19,8 +19,16 @@ module.exports = {
 			    }
 	     	},
 	     	{
-		        test: /\.less$/,
-		        loader: "style!css!less"
+		        test: /\.scss$/,
+		        loaders: ["style", "css", "sass"]
+		    },
+		    {
+		      test: /\.js$/,
+		      exclude: /(node_modules)/,
+		      loader: 'babel-loader',
+		      query: {
+		        presets: ['es2015']
+		      }
 		    }
 	     ]
 	 }

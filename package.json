@@ -26,8 +26,8 @@
   "homepage": "https://github.com/Foggyman/react-color-picker#readme",
   "devDependencies": {
     "css-loader": "^0.25.0",
-    "less": "^2.7.1",
-    "less-loader": "^2.2.3",
+    "node-sass": "^3.10.0",
+    "sass-loader": "^4.0.2",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.2"
   },
@@ -35,8 +35,10 @@
     "babel-core": "^6.14.0",
     "babel-loader": "^6.2.5",
     "babel-preset-react": "^6.11.1",
+    "colr": "^1.2.2",
     "install": "^0.8.1",
     "npm": "^3.10.7",
+    "rc-util": "^4.0.0",
     "react": "^15.3.1",
     "react-dom": "^15.3.1"
   }
