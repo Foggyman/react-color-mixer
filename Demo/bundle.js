@@ -21778,9 +21778,10 @@
 	React = __webpack_require__(5);
 	ColorPicker = __webpack_require__(177);
 	GradientMixer = __webpack_require__(236);
-	__webpack_require__(238);
-	__webpack_require__(240);
-	Color = __webpack_require__(242);
+	ColorSample = __webpack_require__(238);
+	__webpack_require__(241);
+	__webpack_require__(239);
+	Color = __webpack_require__(243);
 
 	var ColorMixer = React.createClass({
 	  displayName: 'ColorMixer',
@@ -21789,20 +21790,20 @@
 
 	  getInitialState() {
 	    return {
-	      gradientColor: null,
-	      gradientColorComplementary: null,
+	      gradientColor: "#800080",
+	      gradientColorComplementary: "#008000",
 	      color1: '#ff0000',
 	      color2: '#0000ff'
 	    };
 	  },
 
 	  changeHandlerColor1: function (e) {
-	    this.refs.gradient.setColor1(e);
-	    this.setState({ color1: e.color });
+	    this.refs.gradient.setColor1(e.color);
+	    this.setState({ color1: e.color, color2: this.state.color2 });
 	  },
 	  changeHandlerColor2: function (e) {
-	    this.refs.gradient.setColor2(e);
-	    this.setState({ color2: e.color });
+	    this.refs.gradient.setColor2(e.color);
+	    this.setState({ color1: this.state.color1, color2: e.color });
 	  },
 	  getMixerContainer: function () {
 	    return this.refs.mixerContainer;
@@ -21810,11 +21811,21 @@
 	  changeHandlerGradientColor: function (color) {
 	    var compl = new Color(color);
 	    compl.rotate(180);
+	    var complHex = compl.hexString();
 
 	    this.setState({
 	      gradientColor: color,
-	      gradientColorComplementary: compl.hexString()
+	      gradientColorComplementary: complHex
 	    });
+
+	    if (this.refs.verticalTint) {
+	      this.refs.verticalTint.setColor1(color);
+	      this.refs.verticalTintCompl.setColor1(complHex);
+	      this.refs.verticalShade.setColor1(color);
+	      this.refs.verticalShadeCompl.setColor1(complHex);
+	      this.refs.colorSample.setColor(color);
+	      this.refs.complementarySample.setColor(complHex);
+	    }
 	  },
 
 	  getGradientResultContainer: function () {
@@ -21858,31 +21869,75 @@
 	        React.createElement(
 	          'div',
 	          { className: 'mixer-result-color' },
-	          React.createElement(ColorPicker, {
-	            getCalendarContainer: this.getGradientResultContainer,
-	            animation: 'slide-up',
-	            placement: 'bottomLeft',
+	          React.createElement(ColorSample, {
+	            ref: 'colorSample',
 	            color: gradientColor
 	          }),
 	          React.createElement(
 	            'p',
 	            null,
 	            'Color Mix'
+	          ),
+	          React.createElement(GradientMixer, {
+	            ref: 'verticalTint',
+	            vertical: 'true',
+	            pickerDisabled: 'true',
+	            color1: gradientColor,
+	            color2: '#ffffff'
+	          }),
+	          React.createElement(GradientMixer, {
+	            ref: 'verticalShade',
+	            vertical: 'true',
+	            pickerDisabled: 'true',
+	            color1: gradientColor,
+	            color2: '#000000'
+	          }),
+	          React.createElement(
+	            'span',
+	            { className: 'label' },
+	            'Tints'
+	          ),
+	          React.createElement(
+	            'span',
+	            { className: 'label' },
+	            'Shades'
 	          )
 	        ),
 	        React.createElement(
 	          'div',
 	          { className: 'mixer-result-color' },
-	          React.createElement(ColorPicker, {
-	            getCalendarContainer: this.getGradientResultContainer,
-	            animation: 'slide-up',
-	            placement: 'bottomLeft',
+	          React.createElement(ColorSample, {
+	            ref: 'complementarySample',
 	            color: gradientColorComplementary
 	          }),
 	          React.createElement(
 	            'p',
 	            null,
 	            'Color Compl.'
+	          ),
+	          React.createElement(GradientMixer, {
+	            ref: 'verticalTintCompl',
+	            pickerDisabled: 'true',
+	            vertical: 'true',
+	            color1: gradientColorComplementary,
+	            color2: '#ffffff'
+	          }),
+	          React.createElement(GradientMixer, {
+	            ref: 'verticalShadeCompl',
+	            vertical: 'true',
+	            pickerDisabled: 'true',
+	            color1: gradientColorComplementary,
+	            color2: '#000000'
+	          }),
+	          React.createElement(
+	            'span',
+	            { className: 'label' },
+	            'Tints'
+	          ),
+	          React.createElement(
+	            'span',
+	            { className: 'label' },
+	            'Shades'
 	          )
 	        )
 	      )
@@ -28901,37 +28956,62 @@
 	  displayName: 'GradientMixer',
 
 
-	  color1: {
-	    color: "#ff0000"
-	  },
-	  color2: {
-	    color: "#00ff00"
-	  },
+	  color1: "#ff0000",
+	  color2: "#00ff00",
+
+	  vertical: false,
+
+	  pickerDisabled: false,
+
+	  width: 300,
+	  height: 25,
 
 	  getInitialState: function () {
 	    return { perPosition: 50 };
 	  },
 
 	  componentDidMount: function () {
-	    this.color1.color = this.props.color1 || this.color1.color;
-	    this.color2.color = this.props.color2 || this.color2.color;
+	    this.color1 = this.props.color1 || this.color1;
+	    this.color2 = this.props.color2 || this.color2;
+
+	    this.vertical = this.props.vertical || this.vertical;
+	    this.pickerDisabled = this.props.pickerDisabled || this.pickerDisabled;
+
+	    if (this.vertical) {
+	      this.width = 25;
+	      this.height = 300;
+	    }
+
 	    this.updateCanvas();
-	    this.updateGradintColor();
+	    this.updateGradientColor();
 	  },
 
 	  mouseDownHandler: function (e) {
-	    this.moveGradient(e.clientX);
+	    if (this.pickerDisabled) return;
+	    if (this.vertical) {
+	      this.moveGradient(e.clientY);
+	    } else {
+	      this.moveGradient(e.clientX);
+	    }
 
 	    this.dragListener = rcUtilAddEventListener(window, 'mousemove', this.mouseDragHandler);
 	    this.dragUpListener = rcUtilAddEventListener(window, 'mouseup', this.mouseDragEndHandler);
 	  },
 
 	  mouseDragHandler: function (e) {
-	    this.moveGradient(e.clientX);
+	    if (this.vertical) {
+	      this.moveGradient(e.clientY);
+	    } else {
+	      this.moveGradient(e.clientX);
+	    }
 	  },
 
 	  mouseDragEndHandler: function (e) {
-	    this.moveGradient(e.clientX);
+	    if (this.vertical) {
+	      this.moveGradient(e.clientY);
+	    } else {
+	      this.moveGradient(e.clientX);
+	    }
 	    this.removeListeners();
 	  },
 
@@ -28946,64 +29026,88 @@
 	    }
 	  },
 
-	  moveGradient(x) {
+	  moveGradient(coord) {
 	    var rect = ReactDOM.findDOMNode(this).getBoundingClientRect();
-	    var width = rect.width;
-	    var left = x - rect.left;
-	    left = Math.max(0, left);
-	    left = Math.min(left, width);
-	    this.setState({ perPosition: 100 * (left / width) }, this.updateGradintColor);
+	    if (this.vertical) {
+	      var height = rect.height;
+	      var top = coord - rect.top;
+	      top = Math.max(0, top);
+	      top = Math.min(top, height);
+	      this.setState({ perPosition: 100 * (top / height) }, this.updateGradientColor);
+	    } else {
+	      var width = rect.width;
+	      var left = coord - rect.left;
+	      left = Math.max(0, left);
+	      left = Math.min(left, width);
+	      this.setState({ perPosition: 100 * (left / width) }, this.updateGradientColor);
+	    }
 	  },
 
-	  updateGradintColor: function () {
+	  updateGradientColor: function () {
 
 	    var p = this.state.perPosition / 100;
 
-	    var rgb1 = Colr.fromHex(this.color1.color).toRgbObject();
-	    var rgb2 = Colr.fromHex(this.color2.color).toRgbObject();
+	    var rgb1 = Colr.fromHex(this.color1).toRgbObject();
+	    var rgb2 = Colr.fromHex(this.color2).toRgbObject();
 
 	    var gradientColor = Colr.fromRgb(rgb2.r * p + rgb1.r * (1 - p), rgb2.g * p + rgb1.g * (1 - p), rgb2.b * p + rgb1.b * (1 - p));
 
-	    this.props.onChange(gradientColor.toHex());
+	    if (!this.pickerDisabled) {
+	      this.props.onChange(gradientColor.toHex());
+	    }
 	  },
 
 	  setColor1: function (color) {
 	    this.color1 = color;
 	    this.updateCanvas();
-	    this.updateGradintColor();
+	    this.updateGradientColor();
 	  },
 
 	  setColor2: function (color) {
 	    this.color2 = color;
 	    this.updateCanvas();
-	    this.updateGradintColor();
+	    this.updateGradientColor();
 	  },
 
 	  updateCanvas: function () {
 	    var ctx = this.refs.canvas.getContext('2d');
 
-	    ctx.canvas.width = 300;
-	    ctx.canvas.height = 25;
+	    ctx.canvas.width = this.width;
+	    ctx.canvas.height = this.height;
 
-	    var grd = ctx.createLinearGradient(0, 0, 300, 0);
-	    grd.addColorStop(0, this.color1.color);
-	    grd.addColorStop(1, this.color2.color);
+	    var grd = ctx.createLinearGradient(0, 0, this.vertical ? 0 : this.width, this.vertical ? this.height : 0);
 
-	    ctx.clearRect(0, 0, 300, 25);
+	    grd.addColorStop(0, this.color1);
+	    grd.addColorStop(1, this.color2);
+
+	    ctx.clearRect(0, 0, this.width, this.height);
 	    ctx.fillStyle = grd;
-	    ctx.fillRect(0, 0, 300, 25);
+	    ctx.fillRect(0, 0, this.width, this.height);
 	  },
 
 	  render: function () {
-	    var perPosition = this.state.perPosition;
+	    var containerClass = "gradient-picker";
+	    var pointStyle = {
+	      left: this.state.perPosition + '%'
+	    };
+	    if (this.props.vertical) {
+	      containerClass += " vertical-gradient";
+	      pointStyle = {
+	        top: this.state.perPosition + '%'
+	      };
+	    }
+	    if (this.props.pickerDisabled) {
+	      containerClass += " disable-picker";
+	    }
+
 	    return React.createElement(
 	      'div',
 	      {
-	        className: 'gradient-picker',
+	        className: containerClass,
 	        onMouseDown: this.mouseDownHandler
 	      },
 	      React.createElement('canvas', { ref: 'canvas' }),
-	      React.createElement('span', { className: 'gradient-point', style: { left: perPosition + '%' } })
+	      React.createElement('span', { className: 'gradient-point', style: pointStyle })
 	    );
 	  }
 	});
@@ -29044,50 +29148,40 @@
 /* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// style-loader: Adds some css to the DOM by adding a <style> tag
+	React = __webpack_require__(5);
+	__webpack_require__(239);
 
-	// load the styles
-	var content = __webpack_require__(239);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(4)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./index.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./index.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
+	var ColorSample = React.createClass({
+		displayName: "ColorSample",
+
+		getInitialState: function () {
+			return { color: this.props.color };
+		},
+
+		setColor: function (color) {
+			this.setState({ color: color });
+		},
+
+		render: function () {
+			var bgColor = this.state.color;
+			return React.createElement(
+				"div",
+				{ className: "colorSample" },
+				React.createElement("div", { style: { backgroundColor: bgColor } })
+			);
 		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
+	});
+
+	module.exports = ColorSample;
 
 /***/ },
 /* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(3)();
-	// imports
-
-
-	// module
-	exports.push([module.id, ".rc-color-picker-panel-inner {\n  position: relative;\n  border-radius: 4px;\n  box-shadow: 0 1px 5px #ccc;\n  border: 1px solid #ccc;\n  padding: 8px;\n}\n.rc-color-picker-panel-wrap {\n  margin: 5px 0 0;\n  height: 30px;\n  width: 100%;\n  position: relative;\n}\n.rc-color-picker-panel-wrap-preview {\n  position: absolute;\n  right: 0px;\n}\n.rc-color-picker-panel-wrap-ribbon {\n  position: absolute;\n  left: 0px;\n  top: 0;\n  right: 35px;\n  height: 12.5px;\n}\n.rc-color-picker-panel-wrap-alpha {\n  position: absolute;\n  left: 0px;\n  right: 35px;\n  bottom: 0;\n  height: 12.5px;\n}\n.rc-color-picker-trigger {\n  border: 1px solid #999;\n  display: inline-block;\n  padding: 2px;\n  border-radius: 2px;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  width: 20px;\n  height: 20px;\n  cursor: pointer;\n  box-shadow: 0 0 0 2px #fff inset;\n}\n.rc-color-picker-trigger-open {\n  box-shadow: 0px 0px 3px #999;\n}\n.rc-color-picker-panel {\n  width: 218px;\n  background-color: #fff;\n  box-sizing: border-box;\n  outline: none;\n  z-index: 9;\n  -moz-user-select: none;\n  -khtml-user-select: none;\n  -webkit-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.rc-color-picker-panel * {\n  box-sizing: border-box;\n}\n.rc-color-picker-panel-open {\n  display: block;\n}\n.rc-color-picker-panel-close {\n  display: none;\n}\n.rc-color-picker-panel-preview {\n  height: 30px;\n  width: 30px;\n  overflow: hidden;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n  background-image: url('data:image/png;base64,R0lGODdhCgAKAPAAAOXl5f///ywAAAAACgAKAEACEIQdqXt9GxyETrI279OIgwIAOw==');\n}\n.rc-color-picker-panel-preview span,\n.rc-color-picker-panel-preview input[type=color] {\n  position: absolute;\n  display: block;\n  height: 100%;\n  width: 30px;\n  border-radius: 2px;\n}\n.rc-color-picker-panel-preview input[type=color] {\n  opacity: 0;\n}\n.rc-color-picker-panel-board {\n  position: relative;\n  font-size: 0;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-board span {\n  position: absolute;\n  border-radius: 10px;\n  border: 1px solid #fff;\n  width: 9px;\n  height: 9px;\n  left: -999px;\n  top: -999px;\n  box-shadow: 0 0 1px rgba(120, 120, 120, 0.7);\n  z-index: 2;\n}\n.rc-color-picker-panel-board-hsv {\n  width: 200px;\n  height: 150px;\n  position: relative;\n  z-index: 1;\n  border-radius: 2px;\n}\n.rc-color-picker-panel-board-value {\n  border-radius: 2px;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  left: 0;\n  top: 0;\n  z-index: 2;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9InJnYigwLDAsMCkiIHN0b3Atb3BhY2l0eT0iMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwMDAwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to bottom, transparent 0%, #000000 100%);\n}\n.rc-color-picker-panel-board-saturation {\n  border-radius: 2px;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  left: 0;\n  top: 0;\n  z-index: 1;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0icmdiKDAsMCwwKSIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to right, #ffffff 0%, transparent 100%);\n}\n.rc-color-picker-panel-board-handler {\n  box-shadow: 0 0 2px #808080 inset;\n  border-radius: 2px;\n  cursor: crosshair;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 3;\n}\n.rc-color-picker-panel-ribbon {\n  position: relative;\n  height: 100%;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjAwMDAiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAlIiBzdG9wLWNvbG9yPSIjZmY5OTAwIiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjIwJSIgc3RvcC1jb2xvcj0iI2NkZmYwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSIzMCUiIHN0b3AtY29sb3I9IiMzNWZmMDAiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iNDAlIiBzdG9wLWNvbG9yPSIjMDBmZjY2IiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzAwZmZmZCIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMwMDY2ZmYiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iNzAlIiBzdG9wLWNvbG9yPSIjMzIwMGZmIiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjgwJSIgc3RvcC1jb2xvcj0iI2NkMDBmZiIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSI5MCUiIHN0b3AtY29sb3I9IiNmZjAwOTkiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmMDAwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to right, #ff0000 0%, #ff9900 10%, #cdff00 20%, #35ff00 30%, #00ff66 40%, #00fffd 50%, #0066ff 60%, #3200ff 70%, #cd00ff 80%, #ff0099 90%, #ff0000 100%);\n}\n.rc-color-picker-panel-ribbon span {\n  position: absolute;\n  top: 0;\n  height: 100%;\n  width: 4px;\n  border: 1px solid #000000;\n  padding: 1px 0;\n  margin-left: -2px;\n  background-color: #fff;\n  border-radius: 3px;\n}\n.rc-color-picker-panel-ribbon-handler {\n  position: absolute;\n  width: 104%;\n  height: 100%;\n  left: -2%;\n  cursor: pointer;\n}\n.rc-color-picker-panel-alpha {\n  position: relative;\n  height: 100%;\n  width: 100%;\n  border-radius: 2px;\n  background-image: url('data:image/png;base64,R0lGODdhCgAKAPAAAOXl5f///ywAAAAACgAKAEACEIQdqXt9GxyETrI279OIgwIAOw==');\n  background-repeat: repeat;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-alpha-bg {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n}\n.rc-color-picker-panel-alpha span {\n  position: absolute;\n  top: 0;\n  height: 100%;\n  width: 4px;\n  border: 1px solid #000000;\n  padding: 1px 0;\n  margin-left: -2px;\n  background-color: #fff;\n  border-radius: 3px;\n}\n.rc-color-picker-panel-alpha-handler {\n  position: absolute;\n  width: 104%;\n  height: 100%;\n  left: -2%;\n  cursor: pointer;\n}\n.rc-color-picker-panel-params {\n  font-size: 12px;\n}\n.rc-color-picker-panel-params-input {\n  overflow: hidden;\n  padding: 2px 0;\n}\n.rc-color-picker-panel-params input {\n  -webkit-user-select: text;\n     -moz-user-select: text;\n      -ms-user-select: text;\n          user-select: text;\n  text-align: center;\n  padding: 1px;\n  margin: 0;\n  float: left;\n  border-radius: 2px;\n  border: 1px solid #CACACA;\n  font-family: 'Helvetica Neue', Helvetica, sans-serif;\n}\n.rc-color-picker-panel-params-hex {\n  width: 52px;\n}\n.rc-color-picker-panel-params input[type=number] {\n  margin-left: 5px;\n  width: 32px;\n}\n.rc-color-picker-panel-params input[type=number]::-webkit-inner-spin-button {\n  -webkit-appearance: none;\n}\n.rc-color-picker-panel-params-lable {\n  padding: 2px 0;\n  height: 22px;\n  line-height: 18px;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-params-lable label {\n  float: left;\n  text-align: center;\n}\n.rc-color-picker-panel-params-lable-hex {\n  width: 52px;\n}\n.rc-color-picker-panel-params-lable-number,\n.rc-color-picker-panel-params-lable-alpha {\n  margin-left: 5px;\n  width: 32px;\n}\n.rc-color-picker-panel-params-lable-number:hover {\n  border-radius: 2px;\n  background-color: #eee;\n  box-shadow: 0 0 0 1px #ccc inset;\n  cursor: pointer;\n}\n.rc-color-picker {\n  position: absolute;\n  left: -9999px;\n  top: -9999px;\n  z-index: 1000;\n}\n.rc-color-picker-wrap {\n  display: inline-block;\n}\n.rc-color-picker-slide-up-enter {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 0;\n  -webkit-animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n          animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-appear {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 0;\n  -webkit-animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n          animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-leave {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 1;\n  -webkit-animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.34);\n          animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.34);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-bottomRight,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-bottomRight {\n  -webkit-animation-name: rcColorPickerSlideUpIn;\n          animation-name: rcColorPickerSlideUpIn;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-topRight,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-topRight {\n  -webkit-animation-name: rcColorPickerSlideDownIn;\n          animation-name: rcColorPickerSlideDownIn;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-bottomRight {\n  -webkit-animation-name: rcColorPickerSlideUpOut;\n          animation-name: rcColorPickerSlideUpOut;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-topRight {\n  -webkit-animation-name: rcColorPickerSlideDownOut;\n          animation-name: rcColorPickerSlideDownOut;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n@-webkit-keyframes rcColorPickerSlideUpIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@keyframes rcColorPickerSlideUpIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideUpOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@keyframes rcColorPickerSlideUpOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideDownIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@keyframes rcColorPickerSlideDownIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideDownOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@keyframes rcColorPickerSlideDownOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n", ""]);
-
-	// exports
-
-
-/***/ },
-/* 240 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(241);
+	var content = __webpack_require__(240);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(4)(content, {});
@@ -29107,7 +29201,7 @@
 	}
 
 /***/ },
-/* 241 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(3)();
@@ -29115,19 +29209,59 @@
 
 
 	// module
-	exports.push([module.id, ".rc-color-mixer .gradient-picker {\n  position: relative;\n  display: inline-block;\n  width: 304px;\n  height: 29px;\n  border-radius: 2px;\n  border: 1px solid #999;\n  margin: 0 5px; }\n  .rc-color-mixer .gradient-picker canvas {\n    height: 29px;\n    width: 304px;\n    padding: 2px;\n    box-sizing: border-box; }\n  .rc-color-mixer .gradient-picker .gradient-point {\n    position: absolute;\n    top: -10%;\n    margin-left: -3px;\n    height: 120%;\n    width: 6px;\n    border: 1px solid #999;\n    border-radius: 5px;\n    background-color: #fff; }\n\n.rc-color-mixer .mixer-result {\n  margin: 10px auto; }\n  .rc-color-mixer .mixer-result .mixer-result-color {\n    padding: 0 40px;\n    width: 94px;\n    display: inline-block; }\n    .rc-color-mixer .mixer-result .mixer-result-color p {\n      margin: 0; }\n  .rc-color-mixer .mixer-result .rc-color-picker-trigger {\n    height: 50px;\n    width: 50px;\n    border-radius: 3px; }\n  .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-alpha {\n    display: block;\n    height: 25px;\n    width: 100%;\n    margin-top: -5px; }\n    .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-alpha span {\n      top: -10%;\n      margin-left: -3px;\n      height: 120%;\n      width: 6px;\n      border: 1px solid #999;\n      border-radius: 5px;\n      background-color: #fff;\n      padding: 0; }\n  .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-ribbon {\n    display: none; }\n\n.rc-color-mixer .rc-color-picker-trigger {\n  height: 25px;\n  width: 25px; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-alpha {\n  display: none; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-ribbon {\n  height: 25px;\n  width: 100%;\n  margin-top: 5px; }\n  .rc-color-mixer .rc-color-picker-panel-wrap-ribbon span {\n    top: -10%;\n    margin-left: -3px;\n    height: 120%;\n    width: 6px;\n    border: 1px solid #999;\n    border-radius: 5px;\n    background-color: #fff;\n    padding: 0; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-preview {\n  display: none; }\n", ""]);
+	exports.push([module.id, ".rc-color-mixer .gradient-picker {\n  position: relative;\n  display: inline-block;\n  width: 304px;\n  height: 29px;\n  border-radius: 2px;\n  border: 1px solid #999;\n  margin: 0 5px;\n  background-color: #fff; }\n  .rc-color-mixer .gradient-picker canvas {\n    height: 29px;\n    width: 304px;\n    padding: 2px;\n    box-sizing: border-box; }\n  .rc-color-mixer .gradient-picker .gradient-point {\n    position: absolute;\n    top: -10%;\n    margin-left: -3px;\n    height: 120%;\n    width: 6px;\n    border: 1px solid #999;\n    border-radius: 5px;\n    background-color: #fff; }\n  .rc-color-mixer .gradient-picker.vertical-gradient {\n    height: 304px;\n    width: 29px;\n    margin: 5px 15px; }\n    .rc-color-mixer .gradient-picker.vertical-gradient canvas {\n      height: 304px;\n      width: 29px; }\n    .rc-color-mixer .gradient-picker.vertical-gradient .gradient-point {\n      margin-left: 0;\n      left: -10%;\n      top: auto;\n      margin-top: -3px;\n      width: 120%;\n      height: 6px; }\n  .rc-color-mixer .gradient-picker.disable-picker .gradient-point {\n    display: none; }\n\n.rc-color-mixer .mixer-result {\n  margin: 10px auto; }\n  .rc-color-mixer .mixer-result .mixer-result-color {\n    padding: 0 20px;\n    width: 130px;\n    display: inline-block; }\n    .rc-color-mixer .mixer-result .mixer-result-color p {\n      margin: 0; }\n  .rc-color-mixer .mixer-result .colorSample {\n    height: 50px;\n    width: 50px;\n    border-radius: 3px;\n    padding: 2px;\n    background-color: #fff;\n    border: 1px solid #999;\n    display: inline-block; }\n    .rc-color-mixer .mixer-result .colorSample > div {\n      width: 100%;\n      height: 100%; }\n  .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-alpha {\n    display: block;\n    height: 25px;\n    width: 100%;\n    margin-top: -5px; }\n    .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-alpha span {\n      top: -10%;\n      margin-left: -3px;\n      height: 120%;\n      width: 6px;\n      border: 1px solid #999;\n      border-radius: 5px;\n      background-color: #fff;\n      padding: 0; }\n  .rc-color-mixer .mixer-result .rc-color-picker-panel-wrap-ribbon {\n    display: none; }\n  .rc-color-mixer .mixer-result .label {\n    display: inline-block;\n    width: 50%;\n    text-align: center;\n    font-size: 14px; }\n\n.rc-color-mixer .rc-color-picker-trigger {\n  height: 25px;\n  width: 25px; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-alpha {\n  display: none; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-ribbon {\n  height: 25px;\n  width: 100%;\n  margin-top: 5px; }\n  .rc-color-mixer .rc-color-picker-panel-wrap-ribbon span {\n    top: -10%;\n    margin-left: -3px;\n    height: 120%;\n    width: 6px;\n    border: 1px solid #999;\n    border-radius: 5px;\n    background-color: #fff;\n    padding: 0; }\n\n.rc-color-mixer .rc-color-picker-panel-wrap-preview {\n  display: none; }\n", ""]);
 
 	// exports
 
 
 /***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(242);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(4)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../css-loader/index.js!./index.css", function() {
+				var newContent = require("!!./../../css-loader/index.js!./index.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
 /* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
+	exports = module.exports = __webpack_require__(3)();
+	// imports
+
+
+	// module
+	exports.push([module.id, ".rc-color-picker-panel-inner {\n  position: relative;\n  border-radius: 4px;\n  box-shadow: 0 1px 5px #ccc;\n  border: 1px solid #ccc;\n  padding: 8px;\n}\n.rc-color-picker-panel-wrap {\n  margin: 5px 0 0;\n  height: 30px;\n  width: 100%;\n  position: relative;\n}\n.rc-color-picker-panel-wrap-preview {\n  position: absolute;\n  right: 0px;\n}\n.rc-color-picker-panel-wrap-ribbon {\n  position: absolute;\n  left: 0px;\n  top: 0;\n  right: 35px;\n  height: 12.5px;\n}\n.rc-color-picker-panel-wrap-alpha {\n  position: absolute;\n  left: 0px;\n  right: 35px;\n  bottom: 0;\n  height: 12.5px;\n}\n.rc-color-picker-trigger {\n  border: 1px solid #999;\n  display: inline-block;\n  padding: 2px;\n  border-radius: 2px;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  width: 20px;\n  height: 20px;\n  cursor: pointer;\n  box-shadow: 0 0 0 2px #fff inset;\n}\n.rc-color-picker-trigger-open {\n  box-shadow: 0px 0px 3px #999;\n}\n.rc-color-picker-panel {\n  width: 218px;\n  background-color: #fff;\n  box-sizing: border-box;\n  outline: none;\n  z-index: 9;\n  -moz-user-select: none;\n  -khtml-user-select: none;\n  -webkit-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n.rc-color-picker-panel * {\n  box-sizing: border-box;\n}\n.rc-color-picker-panel-open {\n  display: block;\n}\n.rc-color-picker-panel-close {\n  display: none;\n}\n.rc-color-picker-panel-preview {\n  height: 30px;\n  width: 30px;\n  overflow: hidden;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n  background-image: url('data:image/png;base64,R0lGODdhCgAKAPAAAOXl5f///ywAAAAACgAKAEACEIQdqXt9GxyETrI279OIgwIAOw==');\n}\n.rc-color-picker-panel-preview span,\n.rc-color-picker-panel-preview input[type=color] {\n  position: absolute;\n  display: block;\n  height: 100%;\n  width: 30px;\n  border-radius: 2px;\n}\n.rc-color-picker-panel-preview input[type=color] {\n  opacity: 0;\n}\n.rc-color-picker-panel-board {\n  position: relative;\n  font-size: 0;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-board span {\n  position: absolute;\n  border-radius: 10px;\n  border: 1px solid #fff;\n  width: 9px;\n  height: 9px;\n  left: -999px;\n  top: -999px;\n  box-shadow: 0 0 1px rgba(120, 120, 120, 0.7);\n  z-index: 2;\n}\n.rc-color-picker-panel-board-hsv {\n  width: 200px;\n  height: 150px;\n  position: relative;\n  z-index: 1;\n  border-radius: 2px;\n}\n.rc-color-picker-panel-board-value {\n  border-radius: 2px;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  left: 0;\n  top: 0;\n  z-index: 2;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9InJnYigwLDAsMCkiIHN0b3Atb3BhY2l0eT0iMCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwMDAwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to bottom, transparent 0%, #000000 100%);\n}\n.rc-color-picker-panel-board-saturation {\n  border-radius: 2px;\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  left: 0;\n  top: 0;\n  z-index: 1;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0icmdiKDAsMCwwKSIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to right, #ffffff 0%, transparent 100%);\n}\n.rc-color-picker-panel-board-handler {\n  box-shadow: 0 0 2px #808080 inset;\n  border-radius: 2px;\n  cursor: crosshair;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 3;\n}\n.rc-color-picker-panel-ribbon {\n  position: relative;\n  height: 100%;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMSAxIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48bGluZWFyR3JhZGllbnQgaWQ9Imxlc3NoYXQtZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjAwMDAiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAlIiBzdG9wLWNvbG9yPSIjZmY5OTAwIiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjIwJSIgc3RvcC1jb2xvcj0iI2NkZmYwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSIzMCUiIHN0b3AtY29sb3I9IiMzNWZmMDAiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iNDAlIiBzdG9wLWNvbG9yPSIjMDBmZjY2IiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzAwZmZmZCIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMwMDY2ZmYiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iNzAlIiBzdG9wLWNvbG9yPSIjMzIwMGZmIiBzdG9wLW9wYWNpdHk9IjEiLz48c3RvcCBvZmZzZXQ9IjgwJSIgc3RvcC1jb2xvcj0iI2NkMDBmZiIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSI5MCUiIHN0b3AtY29sb3I9IiNmZjAwOTkiIHN0b3Atb3BhY2l0eT0iMSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmMDAwMCIgc3RvcC1vcGFjaXR5PSIxIi8+PC9saW5lYXJHcmFkaWVudD48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2xlc3NoYXQtZ2VuZXJhdGVkKSIgLz48L3N2Zz4=);\n  background-image: linear-gradient(to right, #ff0000 0%, #ff9900 10%, #cdff00 20%, #35ff00 30%, #00ff66 40%, #00fffd 50%, #0066ff 60%, #3200ff 70%, #cd00ff 80%, #ff0099 90%, #ff0000 100%);\n}\n.rc-color-picker-panel-ribbon span {\n  position: absolute;\n  top: 0;\n  height: 100%;\n  width: 4px;\n  border: 1px solid #000000;\n  padding: 1px 0;\n  margin-left: -2px;\n  background-color: #fff;\n  border-radius: 3px;\n}\n.rc-color-picker-panel-ribbon-handler {\n  position: absolute;\n  width: 104%;\n  height: 100%;\n  left: -2%;\n  cursor: pointer;\n}\n.rc-color-picker-panel-alpha {\n  position: relative;\n  height: 100%;\n  width: 100%;\n  border-radius: 2px;\n  background-image: url('data:image/png;base64,R0lGODdhCgAKAPAAAOXl5f///ywAAAAACgAKAEACEIQdqXt9GxyETrI279OIgwIAOw==');\n  background-repeat: repeat;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-alpha-bg {\n  position: absolute;\n  width: 100%;\n  height: 100%;\n  border-radius: 2px;\n  box-shadow: 0 0 2px #808080 inset;\n}\n.rc-color-picker-panel-alpha span {\n  position: absolute;\n  top: 0;\n  height: 100%;\n  width: 4px;\n  border: 1px solid #000000;\n  padding: 1px 0;\n  margin-left: -2px;\n  background-color: #fff;\n  border-radius: 3px;\n}\n.rc-color-picker-panel-alpha-handler {\n  position: absolute;\n  width: 104%;\n  height: 100%;\n  left: -2%;\n  cursor: pointer;\n}\n.rc-color-picker-panel-params {\n  font-size: 12px;\n}\n.rc-color-picker-panel-params-input {\n  overflow: hidden;\n  padding: 2px 0;\n}\n.rc-color-picker-panel-params input {\n  -webkit-user-select: text;\n     -moz-user-select: text;\n      -ms-user-select: text;\n          user-select: text;\n  text-align: center;\n  padding: 1px;\n  margin: 0;\n  float: left;\n  border-radius: 2px;\n  border: 1px solid #CACACA;\n  font-family: 'Helvetica Neue', Helvetica, sans-serif;\n}\n.rc-color-picker-panel-params-hex {\n  width: 52px;\n}\n.rc-color-picker-panel-params input[type=number] {\n  margin-left: 5px;\n  width: 32px;\n}\n.rc-color-picker-panel-params input[type=number]::-webkit-inner-spin-button {\n  -webkit-appearance: none;\n}\n.rc-color-picker-panel-params-lable {\n  padding: 2px 0;\n  height: 22px;\n  line-height: 18px;\n  -webkit-user-select: none;\n     -moz-user-select: none;\n      -ms-user-select: none;\n          user-select: none;\n}\n.rc-color-picker-panel-params-lable label {\n  float: left;\n  text-align: center;\n}\n.rc-color-picker-panel-params-lable-hex {\n  width: 52px;\n}\n.rc-color-picker-panel-params-lable-number,\n.rc-color-picker-panel-params-lable-alpha {\n  margin-left: 5px;\n  width: 32px;\n}\n.rc-color-picker-panel-params-lable-number:hover {\n  border-radius: 2px;\n  background-color: #eee;\n  box-shadow: 0 0 0 1px #ccc inset;\n  cursor: pointer;\n}\n.rc-color-picker {\n  position: absolute;\n  left: -9999px;\n  top: -9999px;\n  z-index: 1000;\n}\n.rc-color-picker-wrap {\n  display: inline-block;\n}\n.rc-color-picker-slide-up-enter {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 0;\n  -webkit-animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n          animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-appear {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 0;\n  -webkit-animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n          animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-leave {\n  -webkit-animation-duration: .3s;\n          animation-duration: .3s;\n  -webkit-animation-fill-mode: both;\n          animation-fill-mode: both;\n  -webkit-transform-origin: 0 0;\n          transform-origin: 0 0;\n  display: block !important;\n  opacity: 1;\n  -webkit-animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.34);\n          animation-timing-function: cubic-bezier(0.6, 0.04, 0.98, 0.34);\n  -webkit-animation-play-state: paused;\n          animation-play-state: paused;\n}\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-bottomRight,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-bottomRight {\n  -webkit-animation-name: rcColorPickerSlideUpIn;\n          animation-name: rcColorPickerSlideUpIn;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-enter.rc-color-picker-slide-up-enter-active.rc-color-picker-placement-topRight,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-appear.rc-color-picker-slide-up-appear-active.rc-color-picker-placement-topRight {\n  -webkit-animation-name: rcColorPickerSlideDownIn;\n          animation-name: rcColorPickerSlideDownIn;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-bottomLeft,\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-bottomRight {\n  -webkit-animation-name: rcColorPickerSlideUpOut;\n          animation-name: rcColorPickerSlideUpOut;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-topLeft,\n.rc-color-picker-slide-up-leave.rc-color-picker-slide-up-leave-active.rc-color-picker-placement-topRight {\n  -webkit-animation-name: rcColorPickerSlideDownOut;\n          animation-name: rcColorPickerSlideDownOut;\n  -webkit-animation-play-state: running;\n          animation-play-state: running;\n}\n@-webkit-keyframes rcColorPickerSlideUpIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@keyframes rcColorPickerSlideUpIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideUpOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@keyframes rcColorPickerSlideUpOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 0% 0%;\n            transform-origin: 0% 0%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideDownIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@keyframes rcColorPickerSlideDownIn {\n  0% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n  100% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n}\n@-webkit-keyframes rcColorPickerSlideDownOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n@keyframes rcColorPickerSlideDownOut {\n  0% {\n    opacity: 1;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(1);\n            transform: scaleY(1);\n  }\n  100% {\n    opacity: 0;\n    -webkit-transform-origin: 100% 100%;\n            transform-origin: 100% 100%;\n    -webkit-transform: scaleY(0);\n            transform: scaleY(0);\n  }\n}\n", ""]);
+
+	// exports
+
+
+/***/ },
+/* 243 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* MIT license */
-	var clone = __webpack_require__(243);
-	var convert = __webpack_require__(248);
-	var string = __webpack_require__(252);
+	var clone = __webpack_require__(244);
+	var convert = __webpack_require__(249);
+	var string = __webpack_require__(253);
 
 	var Color = function (obj) {
 		if (obj instanceof Color) {
@@ -29577,7 +29711,7 @@
 
 
 /***/ },
-/* 243 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var clone = (function() {
@@ -29741,10 +29875,10 @@
 	  module.exports = clone;
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(244).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(245).Buffer))
 
 /***/ },
-/* 244 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
@@ -29757,9 +29891,9 @@
 
 	'use strict'
 
-	var base64 = __webpack_require__(245)
-	var ieee754 = __webpack_require__(246)
-	var isArray = __webpack_require__(247)
+	var base64 = __webpack_require__(246)
+	var ieee754 = __webpack_require__(247)
+	var isArray = __webpack_require__(248)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -31537,10 +31671,10 @@
 	  return val !== val // eslint-disable-line no-self-compare
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(244).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(245).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 245 */
+/* 246 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -31655,7 +31789,7 @@
 
 
 /***/ },
-/* 246 */
+/* 247 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -31745,7 +31879,7 @@
 
 
 /***/ },
-/* 247 */
+/* 248 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -31756,11 +31890,11 @@
 
 
 /***/ },
-/* 248 */
+/* 249 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var conversions = __webpack_require__(249);
-	var route = __webpack_require__(251);
+	var conversions = __webpack_require__(250);
+	var route = __webpack_require__(252);
 
 	var convert = {};
 
@@ -31839,11 +31973,11 @@
 
 
 /***/ },
-/* 249 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* MIT license */
-	var cssKeywords = __webpack_require__(250);
+	var cssKeywords = __webpack_require__(251);
 
 	// NOTE: conversions should only return primitive values (i.e. arrays, or
 	//       values that give correct `typeof` results).
@@ -32653,7 +32787,7 @@
 
 
 /***/ },
-/* 250 */
+/* 251 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -32810,10 +32944,10 @@
 
 
 /***/ },
-/* 251 */
+/* 252 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var conversions = __webpack_require__(249);
+	var conversions = __webpack_require__(250);
 
 	/*
 		this function routes a model to all other models.
@@ -32914,11 +33048,11 @@
 
 
 /***/ },
-/* 252 */
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* MIT license */
-	var colorNames = __webpack_require__(253);
+	var colorNames = __webpack_require__(254);
 
 	module.exports = {
 	   getRgba: getRgba,
@@ -33141,7 +33275,7 @@
 
 
 /***/ },
-/* 253 */
+/* 254 */
 /***/ function(module, exports) {
 
 	module.exports = {
