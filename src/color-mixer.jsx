@@ -1,8 +1,9 @@
 React = require("react");
 ColorPicker = require('rc-color-picker');
 GradientMixer = require('./gradient-mixer.jsx');
-require("rc-color-picker/assets/index.css");
-require("./react-color-mixer.scss")
+require('rc-color-picker/assets/index.css');
+require('./react-color-mixer.scss');
+Color = require('color');
 
 var ColorMixer = React.createClass({
   gradientColor: null,
@@ -10,8 +11,9 @@ var ColorMixer = React.createClass({
   getInitialState() {
       return {
           gradientColor: null,
+          gradientColorComplementary: null,
           color1: '#ff0000',
-          color2: '#00ff00'
+          color2: '#0000ff'
       };
   },
 
@@ -27,7 +29,14 @@ var ColorMixer = React.createClass({
     return this.refs.mixerContainer;
   },
   changeHandlerGradientColor: function(color){
-    this.setState({gradientColor: color});
+    var compl = new Color(color);
+    compl.rotate(180);
+
+    this.setState({
+      gradientColor: color,
+      gradientColorComplementary: compl.hexString()
+    });
+
   },
 
   getGradientResultContainer: function(){
@@ -38,19 +47,12 @@ var ColorMixer = React.createClass({
   render: function() {
 
     var gradientColor = this.state.gradientColor;
+    var gradientColorComplementary = this.state.gradientColorComplementary;
     var color1 = this.state.color1;
     var color2 = this.state.color2;
 
     return (
       <div className="rc-color-mixer" ref="mixerContainer">
-        <div className="mixer-result" ref="mixerResult">
-          <ColorPicker
-            getCalendarContainer={this.getGradientResultContainer}
-            animation="slide-up"
-            placement="bottomLeft"
-            color={gradientColor}
-          />
-        </div>
   	    <ColorPicker
           getCalendarContainer={this.getMixerContainer}
   	      animation="slide-up"
@@ -61,6 +63,8 @@ var ColorMixer = React.createClass({
         <GradientMixer
           ref="gradient"
           onChange={this.changeHandlerGradientColor}
+          color1 = {color1}
+          color2 = {color2}
         />
         <ColorPicker
           getCalendarContainer={this.getMixerContainer}
@@ -70,6 +74,26 @@ var ColorMixer = React.createClass({
           color={color2}
           onChange={this.changeHandlerColor2}
         />
+        <div className="mixer-result" ref="mixerResult">
+          <div className="mixer-result-color">
+            <ColorPicker
+              getCalendarContainer={this.getGradientResultContainer}
+              animation="slide-up"
+              placement="bottomLeft"
+              color={gradientColor}
+            />
+            <p>Color Mix</p>
+          </div>
+          <div className="mixer-result-color">
+            <ColorPicker
+              getCalendarContainer={this.getGradientResultContainer}
+              animation="slide-up"
+              placement="bottomLeft"
+              color={gradientColorComplementary}
+            />
+            <p>Color Compl.</p>
+          </div>
+        </div>
       </div>
     );
   }

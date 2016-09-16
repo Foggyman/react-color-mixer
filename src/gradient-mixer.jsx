@@ -8,19 +8,9 @@ Colr = require('colr');
 var GradientMixer = React.createClass({
 
   color1: {
-    hsv: {
-      h: 0,
-      s: 100,
-      v: 100
-    },
     color: "#ff0000"
   },
   color2: {
-    hsv: {
-      h: 120,
-      s: 100,
-      v: 100
-    },
     color: "#00ff00"
   },
 
@@ -30,6 +20,8 @@ var GradientMixer = React.createClass({
   },
 
   componentDidMount: function() {
+    this.color1.color = this.props.color1 || this.color1.color;
+    this.color2.color = this.props.color2 || this.color2.color;
     this.updateCanvas();
     this.updateGradintColor();
   },
@@ -77,7 +69,6 @@ var GradientMixer = React.createClass({
 
 
     var p = this.state.perPosition  / 100;
-    console.log(p);
 
     var rgb1 = Colr.fromHex(this.color1.color).toRgbObject();
     var rgb2 = Colr.fromHex(this.color2.color).toRgbObject();

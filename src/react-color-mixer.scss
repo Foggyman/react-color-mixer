@@ -28,10 +28,16 @@
 	}
 
 	.mixer-result{
-		margin: 0 auto;
-		margin-bottom: 20px;
-		width: 50px;
-		height: 50px;
+		margin: 10px auto;
+
+		.mixer-result-color{
+			padding: 0 40px;
+			width: 94px;
+			display: inline-block;
+			p{
+				margin: 0;
+			}
+		}
 		.rc-color-picker-trigger{
 			height: 50px;
 			width: 50px;
